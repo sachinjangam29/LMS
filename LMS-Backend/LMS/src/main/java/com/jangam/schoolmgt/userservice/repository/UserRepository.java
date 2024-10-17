@@ -5,6 +5,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import javax.swing.text.html.Option;
+import java.util.Optional;
+
 public interface UserRepository extends JpaRepository<User, Integer> {
 
 //    @Query(value = "SELECT CASE WHEN COUNT(*) > 0 THEN true ELSE false END FROM `user` WHERE username = :username", nativeQuery = true)
@@ -12,4 +15,6 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     Boolean existsByUsername(String username);
     Boolean existsByEmail(String email);
+
+    Optional<User> findByUsername(String username);
 }
