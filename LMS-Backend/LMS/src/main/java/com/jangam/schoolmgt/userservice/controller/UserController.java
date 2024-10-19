@@ -12,7 +12,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/user")
@@ -42,12 +45,15 @@ public class UserController {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(),
                         loginRequest.getPassword()));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String token = jwtUtils.generateToken(authentication);
 
-                String token = jwtUtils.generateToken(authentication.getName());
+        return ResponseEntity.ok(token);
+    }
 
-                return ResponseEntity.ok(token );
-     //   return "rer";
-
+    @GetMapping("/all-users")
+    public List<User> getAllUsers() {
+        return userService.getAllUsers();
     }
 
     @DeleteMapping("/delete-all")

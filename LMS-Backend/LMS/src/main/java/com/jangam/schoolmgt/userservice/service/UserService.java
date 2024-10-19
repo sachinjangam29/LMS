@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -52,5 +54,9 @@ public class UserService {
                 .username(signupRequest.getUsername())
                 .isActive(Boolean.FALSE)
                 .build();
+    }
+
+    public List<User> getAllUsers(){
+        return userRepository.findAll();
     }
 }
