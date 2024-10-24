@@ -22,16 +22,12 @@ public class JwtUtils {
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
 
     // Ensure the key is at least 256 bits (32 characters long) for HS256
-    @Value("${bezkoder.app.jwtsecret}")
-    private String SECRET_KEY ;// Replace this with your secure key for production
-    private final Long expiration = 30000L; // Token expiration time in milliseconds (30 seconds)
-  //  private Key key;
-//    @PostConstruct
-//    public void init() {
-//        // The secret should be Base64 encoded and at least 256 bits for HS512
-//        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
-//        this.key = Keys.hmacShaKeyFor(keyBytes);
-//    }
+//    @Value("${bezkoder.app.jwtsecret}")
+    private final String SECRET_KEY = "=====================================BezKoder=Spring======================================";// Replace this with your secure key for production
+    private final Long expiration = 120000L; // Token expiration time in milliseconds (30 seconds)
+
+    //Refresh Token
+    private final Long jwtRefreshTokenExpiration = 300000L;
 
     // Generates a JWT token for a given username
     public String generateToken(Authentication authentication) {
@@ -39,13 +35,21 @@ public class JwtUtils {
         Date currentTime = new Date();
         Date expiryDate = new Date(currentTime.getTime() + expiration);
 
-   //     UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-
         return Jwts.builder()
                 .setSubject(userDetails.getUsername()) // Setting subject as username
                 .setIssuedAt(currentTime) // Current time for issuedAt
                 .setExpiration(expiryDate) // Expiration time
-                .signWith(getSigningKey(), SignatureAlgorithm.HS512) // Use the secure key for signing
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256) // Use the secure key for signing
+                .compact();
+    }
+
+    public String generateRefreshToken(String username) {
+
+        return Jwts.builder()
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(new Date().getTime() + jwtRefreshTokenExpiration))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -57,12 +61,12 @@ public class JwtUtils {
 
     // Retrieves the username (subject) from the token
     public String getUserNameFromToken(String token) {
-        Claims claims = Jwts.parserBuilder()
+        return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey()) // Setting the signing key
                 .build()
                 .parseClaimsJws(token) // Parse the token
-                .getBody(); // Get the body (claims)
-        return claims.getSubject(); // Return the username
+                .getBody() // Get the body (claims)
+                .getSubject(); // Return the username
     }
 
     // Validates the token for its integrity and expiration
@@ -71,7 +75,7 @@ public class JwtUtils {
             Jwts.parserBuilder()
                     .setSigningKey(getSigningKey()) // Set the signing key
                     .build()
-                    .parse(token); // Parse and validate the token
+                    .parseClaimsJws(token); // Parse and validate the token
             return true;
         } catch (MalformedJwtException e) {
             logger.error("Invalid JWT token: {}", e.getMessage());
@@ -81,10 +85,32 @@ public class JwtUtils {
             logger.error("JWT token is unsupported: {}", e.getMessage());
         } catch (IllegalArgumentException e) {
             logger.error("JWT claims string is empty: {}", e.getMessage());
-        }catch (Exception e){
-            logger.error("Unknown exception: {} ",e.getMessage());
+        } catch (Exception e) {
+            logger.error("Unknown exception: {} ", e.getMessage());
         }
-
         return false;
+    }
+
+
+    public boolean validateRefreshToken(String token) {
+        try {
+            Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey()) // Set the signing key
+                    .build()
+                    .parseClaimsJws(token); // Parse and validate the token
+            return true;
+        } catch (MalformedJwtException e) {
+            logger.error("Invalid JWT token: {}", e.getMessage());
+        } catch (ExpiredJwtException e) {
+            logger.error("JWT token is expired: {}", e.getMessage());
+        } catch (UnsupportedJwtException e) {
+            logger.error("JWT token is unsupported: {}", e.getMessage());
+        } catch (IllegalArgumentException e) {
+            logger.error("JWT claims string is empty: {}", e.getMessage());
+        } catch (Exception e) {
+            logger.error("Unknown exception: {} ", e.getMessage());
+        }
+        return false;
+
     }
 }

@@ -1,10 +1,8 @@
 package com.jangam.schoolmgt.userservice.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -37,6 +35,7 @@ public class User {
     @Size(max = 50)
     private String username;
 
+    @JsonIgnore
     @Column(name = "password")
     @NotBlank
     @Size(max = 255)
@@ -70,12 +69,26 @@ public class User {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
 
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
 
     @Column(name = "is_active")
     private Boolean isActive ;
+
+    @PrePersist
+    protected void onCreate(){
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+        this.lastLogin = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate(){
+        this.updatedAt = LocalDateTime.now();
+    }
 }

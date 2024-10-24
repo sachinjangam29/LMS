@@ -1,6 +1,7 @@
 package com.jangam.schoolmgt.userservice.config;
 
 import com.jangam.schoolmgt.userservice.jwt.JwtAuthFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -54,12 +55,21 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(
                         request -> request
-                                .requestMatchers("/api/v1/user/**")
+                                .requestMatchers("/api/v1/user/signup","/api/v1/user/signin", "/api/v1/user/refresh-token")
                                 .permitAll()
                                 .anyRequest()
                                 .authenticated())
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter(), UsernamePasswordAuthenticationFilter.class)
+                .logout(logout -> logout
+                        .logoutUrl("/api/v1/user/logout")
+                        .logoutSuccessHandler((request, response, authentication) -> {
+                            response.setStatus(HttpServletResponse.SC_OK);
+                            response.getWriter().write("Logout Successful");
+                        })
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true)
+                )
                 .httpBasic(Customizer.withDefaults());
         return http.build();
     }
